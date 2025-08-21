@@ -9,6 +9,8 @@ interface IPollingService {
     //start and stop of the polling loop
     start(): void;
     stop(): void;
+    getCurrentHash(): string | null;
+    getLastChanged(): Date | null;
 }
 
 //class of the shape of IPollingService
@@ -21,6 +23,8 @@ export class PollingService extends EventEmitter implements IPollingService {
     private intervalId: NodeJS.Timeout | null = null;
     //can sometimes be a string, sometimes null
     private lastHash: string | null = null;
+    private lastChanged: Date | null = null;
+
 
     //constructor is the recipe for how to create and initialize a pollingService
     constructor(hasher: IDirectoryHasher, directoryPath: string, intervalMs: number) {
@@ -42,6 +46,7 @@ export class PollingService extends EventEmitter implements IPollingService {
             } else if (this.lastHash != newHash) {
                 this.emit("changed", newHash);
                 this.lastHash = newHash;
+                this.lastChanged = new Date();
             }
         }, this.intervalMs);
     }
@@ -55,5 +60,11 @@ export class PollingService extends EventEmitter implements IPollingService {
             //empty the ID so that it will start again
             this.intervalId = null; 
         }
+    }
+    getCurrentHash(): string | null {
+        return this.lastHash;
+    }
+    getLastChanged(): Date | null {
+        return this.lastChanged;
     }
 }

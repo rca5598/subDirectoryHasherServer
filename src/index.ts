@@ -1,7 +1,7 @@
 import { IDirectoryHasher, DirectoryHasher } from "./directoryHasher";
-import { PollingService } from "./pollingService";
+import {  PollingService } from "./pollingService";
+import * as http from "http";
 
-//test
 
 
 async function main() {
@@ -16,12 +16,32 @@ async function main() {
 
     //kicks off the repeating loop using setInterval
     poller.start();
+    console.log("Polling started frm for directory every 3 seconds")
+    const server = http.createServer((req, res) => {
+        //Always response with JSON
+        if (req.url == "/hash") {
+            //return latest hash
+            res.writeHead(200, {"Content-Type": "application/json"});
+            res.end(JSON.stringify({hash: poller.getCurrentHash()}));
+        } else if (req.url == "/changes") {
+            //return last change timestamp
+            res.writeHead(200, {"Content-Type": "application/json"});
+            const changed = poller.getLastChanged();
+            res.end(JSON.stringify({ lastChanged: changed ? changed.toISOString() : null}));
+        } else {
+            //unknown route
+            res.writeHead(404, {"Content-Type": "application/json"});
+            res.end(JSON.stringify({ error: "Not found"}));
+        }
+    });
 
-    //auto stop after 40 seconds
-    setTimeout(() => {
-        poller.stop();
-        console.log("Polling stopped.");
-    }, 40000);
+    server.listen(3000, () => {
+        console.log("Server running");
+        console.log("Available endpoints:");
+        console.log(" - GET /hash")
+        console.log(" - GET /changes")
+    });
+    
 }
 
 
