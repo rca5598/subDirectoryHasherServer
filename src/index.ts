@@ -1,11 +1,27 @@
 import { IDirectoryHasher, DirectoryHasher } from "./directoryHasher";
+import { PollingService } from "./pollingService";
 
+//test
 
-let myHasher = new DirectoryHasher();
 
 async function main() {
-    const res = await myHasher.getHash(".");
-    console.log("Hash of current directory:", res);
+    //create a hasher (instance of my directoryHasher)
+    const hasher = new DirectoryHasher();
+    //similarly create a poller (instance of pollingservice)
+    const poller = new PollingService(hasher, ".", 3000);
+    //listen for a changed event from the poller and then log to console
+    poller.on("changed", (hash) => {
+        console.log("Directory change. New hash:", hash)
+    });
+
+    //kicks off the repeating loop using setInterval
+    poller.start();
+
+    //auto stop after 40 seconds
+    setTimeout(() => {
+        poller.stop();
+        console.log("Polling stopped.");
+    }, 40000);
 }
 
 
